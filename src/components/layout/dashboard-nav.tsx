@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, Briefcase, Star, Settings } from 'lucide-react';
+  LayoutDashboard,
+  FileText,
+  Briefcase,
+  Star,
+  Settings,
+} from 'lucide-react';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -21,24 +22,18 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <div className="p-2">
-      <SidebarMenu>
-        {links.map((link) => (
-          <SidebarMenuItem key={link.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === link.href}
-              className="font-medium"
-              tooltip={{ children: link.label, className: "shadow-neumorphic" }}
-            >
-              <Link href={link.href}>
-                <link.icon />
-                <span>{link.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
+    <div className="flex items-center gap-4 text-sm font-medium">
+      {links.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={`text-foreground/80 hover:text-foreground transition-colors ${
+            pathname === link.href ? 'text-foreground font-semibold' : ''
+          }`}
+        >
+          {link.label}
+        </Link>
+      ))}
     </div>
   );
 }

@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LayoutDashboard, LogOut } from 'lucide-react';
+import { DashboardNav } from './dashboard-nav';
+import { usePathname } from 'next/navigation';
 
 function UserNav() {
   const { user, signOut } = useAuth();
@@ -69,6 +71,9 @@ function UserNav() {
 
 export function Navbar() {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith('/dashboard');
+
   return (
     <header className="sticky top-0 z-50 w-full">
       <nav className="mt-4 mx-4 md:mx-auto max-w-5xl rounded-lg bg-background/60 p-2.5 shadow-neumorphic backdrop-blur-lg backdrop-saturate-150">
@@ -83,12 +88,7 @@ export function Navbar() {
             >
               Home
             </Link>
-            <Link
-              href="/dashboard"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              Dashboard
-            </Link>
+            {isDashboard && <DashboardNav />}
           </div>
           {!loading && (user ? <UserNav /> : <AuthModal><Button>Login</Button></AuthModal>)}
         </div>
