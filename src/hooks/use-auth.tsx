@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  getAuth,
   onAuthStateChanged,
   signOut as firebaseSignOut,
   signInWithEmailAndPassword,
@@ -18,7 +17,7 @@ import {
   type User,
   updateProfile,
 } from 'firebase/auth';
-import { useFirebase, useFirestore } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -68,7 +67,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      await updateUserInFirestore(userCredential.user);
+      // Firestore document is updated on auth state change or if it doesn't exist
       return userCredential;
     } finally {
       setLoading(false);
