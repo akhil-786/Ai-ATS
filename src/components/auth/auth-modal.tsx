@@ -12,11 +12,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Mail, KeyRound, Loader2 } from 'lucide-react';
+import { Mail, KeyRound, Loader2, TriangleAlert } from 'lucide-react';
 import { type ReactNode, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const isFirebaseConfigured =
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'your_api_key';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg role="img" viewBox="0 0 24 24" {...props}>
@@ -38,6 +43,23 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
+
+function FirebaseWarning() {
+  if (isFirebaseConfigured) {
+    return null;
+  }
+
+  return (
+    <Alert variant="destructive" className="mb-4">
+      <TriangleAlert className="h-4 w-4" />
+      <AlertTitle>Firebase Not Configured</AlertTitle>
+      <AlertDescription>
+        Authentication is disabled. Please configure your Firebase credentials in{' '}
+        <code>.env.local</code> to enable sign-up and login.
+      </AlertDescription>
+    </Alert>
+  );
+}
 
 function AuthForm({
   isSignUp = false,
@@ -83,6 +105,8 @@ function AuthForm({
     }
   };
 
+  const isDisabled = loading || !isFirebaseConfigured;
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Button
@@ -90,7 +114,7 @@ function AuthForm({
         className="shadow-neumorphic-inset"
         onClick={handleGoogleSignIn}
         type="button"
-        disabled={loading}
+        disabled={isDisabled}
       >
         {loading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -117,6 +141,7 @@ function AuthForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isDisabled}
           />
         </div>
       </div>
@@ -132,10 +157,11 @@ function AuthForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isDisabled}
           />
         </div>
       </div>
-      <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
+      <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isDisabled}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isSignUp ? 'Create Account' : 'Sign In'}
       </Button>
@@ -170,6 +196,7 @@ export function AuthModal({
             Sign in or create an account to get personalized job recommendations.
           </DialogDescription>
         </DialogHeader>
+        <FirebaseWarning />
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
