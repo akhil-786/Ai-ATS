@@ -60,7 +60,12 @@ const getJobsFromJobBoard = ai.defineTool({
   // TODO: Implement the logic to fetch job recommendations from a job board API
   // based on the extracted skills.
   // This is a placeholder implementation.
-  return [];
+  return [
+    { jobTitle: 'Frontend Developer', companyName: 'WebCo', matchPercentage: 95, jobDescription: 'Build beautiful and responsive web interfaces.', applyLink: '#' },
+    { jobTitle: 'Backend Engineer', companyName: 'DataCorp', matchPercentage: 88, jobDescription: 'Design and maintain scalable server-side applications.', applyLink: '#' },
+    { jobTitle: 'Full-Stack Developer', companyName: 'Innovate LLC', matchPercentage: 82, jobDescription: 'Work across the entire stack to deliver new features.', applyLink: '#' },
+    { jobTitle: 'UX/UI Designer', companyName: 'Creative Inc.', matchPercentage: 75, jobDescription: 'Craft intuitive and delightful user experiences.', applyLink: '#' },
+  ];
 });
 
 const extractSkillsAndRecommendJobsPrompt = ai.definePrompt({
@@ -84,6 +89,6 @@ const recommendJobsBasedOnResumeSkillsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await extractSkillsAndRecommendJobsPrompt(input);
-    return output!;
+    return output || [];
   }
 );

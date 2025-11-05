@@ -74,18 +74,7 @@ export function CareerAIOrchestrator() {
         recommendJobsBasedOnResumeSkills({ resumeText }),
       ]);
       
-      // Placeholder data if AI returns empty
-      if (jobs.length === 0) {
-        setJobRecommendations([
-            { jobTitle: 'Frontend Developer', companyName: 'WebCo', matchPercentage: 95, jobDescription: 'Build beautiful and responsive web interfaces.', applyLink: '#' },
-            { jobTitle: 'Backend Engineer', companyName: 'DataCorp', matchPercentage: 88, jobDescription: 'Design and maintain scalable server-side applications.', applyLink: '#' },
-            { jobTitle: 'Full-Stack Developer', companyName: 'Innovate LLC', matchPercentage: 82, jobDescription: 'Work across the entire stack to deliver new features.', applyLink: '#' },
-            { jobTitle: 'UX/UI Designer', companyName: 'Creative Inc.', matchPercentage: 75, jobDescription: 'Craft intuitive and delightful user experiences.', applyLink: '#' },
-        ]);
-      } else {
-        setJobRecommendations(jobs);
-      }
-      
+      setJobRecommendations(jobs);
       setAtsReport(report);
 
     } catch (error) {
