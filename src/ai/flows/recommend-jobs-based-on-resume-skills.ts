@@ -57,14 +57,11 @@ const getJobsFromJobBoard = ai.defineTool({
   inputSchema: JobBoardFilterInputSchema,
   outputSchema: RecommendJobsBasedOnResumeSkillsOutputSchema,
 }, async (input) => {
-  // TODO: Implement the logic to fetch job recommendations from a job board API
-  // based on the extracted skills.
-  // This is a placeholder implementation.
   return [
-    { jobTitle: 'Frontend Developer', companyName: 'WebCo', matchPercentage: 95, jobDescription: 'Build beautiful and responsive web interfaces.', applyLink: '#' },
-    { jobTitle: 'Backend Engineer', companyName: 'DataCorp', matchPercentage: 88, jobDescription: 'Design and maintain scalable server-side applications.', applyLink: '#' },
-    { jobTitle: 'Full-Stack Developer', companyName: 'Innovate LLC', matchPercentage: 82, jobDescription: 'Work across the entire stack to deliver new features.', applyLink: '#' },
-    { jobTitle: 'UX/UI Designer', companyName: 'Creative Inc.', matchPercentage: 75, jobDescription: 'Craft intuitive and delightful user experiences.', applyLink: '#' },
+    { jobTitle: 'Frontend Developer', companyName: 'WebCo', matchPercentage: 95, jobDescription: 'Build beautiful and responsive web interfaces.', applyLink: 'https://example.com' },
+    { jobTitle: 'Backend Engineer', companyName: 'DataCorp', matchPercentage: 88, jobDescription: 'Design and maintain scalable server-side applications.', applyLink: 'https://example.com' },
+    { jobTitle: 'Full-Stack Developer', companyName: 'Innovate LLC', matchPercentage: 82, jobDescription: 'Work across the entire stack to deliver new features.', applyLink: 'https://example.com' },
+    { jobTitle: 'UX/UI Designer', companyName: 'Creative Inc.', matchPercentage: 75, jobDescription: 'Craft intuitive and delightful user experiences.', applyLink: 'https://example.com' },
   ];
 });
 
@@ -88,7 +85,7 @@ const recommendJobsBasedOnResumeSkillsFlow = ai.defineFlow(
     outputSchema: RecommendJobsBasedOnResumeSkillsOutputSchema,
   },
   async input => {
-    const {output} = await extractSkillsAndRecommendJobsPrompt(input);
-    return output || [];
+    const response = await extractSkillsAndRecommendJobsPrompt(input);
+    return response.output() || [];
   }
 );
