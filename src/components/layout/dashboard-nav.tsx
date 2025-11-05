@@ -9,6 +9,7 @@ import {
   Star,
   Settings,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -23,17 +24,21 @@ export function DashboardNav() {
 
   return (
     <div className="flex items-center gap-4 text-sm font-medium">
-      {links.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className={`text-foreground/80 hover:text-foreground transition-colors ${
-            pathname === link.href ? 'text-foreground font-semibold' : ''
-          }`}
-        >
-          {link.label}
-        </Link>
-      ))}
+      {links.map((link) => {
+        const isActive = pathname === link.href;
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn(
+              'text-foreground/80 hover:text-foreground transition-colors px-3 py-1.5 rounded-md',
+              isActive && 'bg-primary/10 text-primary font-semibold'
+            )}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
