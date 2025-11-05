@@ -46,7 +46,7 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == request.auth.uid;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow update: if isExistingOwner(userId) && (!('id' in request.resource.data) || request.resource.data.id == resource.data.id);
       allow delete: if isExistingOwner(userId);
     }
 
@@ -138,3 +138,4 @@ service cloud.firestore {
     }
   }
 }
+    
