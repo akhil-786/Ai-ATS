@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 
 export default {
   darkMode: ['class'],
@@ -11,7 +11,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        headline: ['Poppins', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -70,6 +70,16 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        'neumorphic':
+          '5px 5px 10px rgba(180, 188, 205, 0.7), -5px -5px 10px rgba(246, 252, 255, 0.8)',
+        'neumorphic-inset':
+          'inset 5px 5px 10px rgba(180, 188, 205, 0.7), inset -5px -5px 10px rgba(246, 252, 255, 0.8)',
+        'neumorphic-dark':
+          '5px 5px 10px rgba(0, 0, 0, 0.3), -5px -5px 10px rgba(42, 62, 99, 0.3)',
+        'neumorphic-dark-inset':
+          'inset 5px 5px 10px rgba(0, 0, 0, 0.3), inset -5px -5px 10px rgba(42, 62, 99, 0.3)',
       },
       keyframes: {
         'accordion-down': {
