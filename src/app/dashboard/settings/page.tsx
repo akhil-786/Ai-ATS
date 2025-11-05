@@ -18,13 +18,15 @@ import { Switch } from '@/components/ui/switch';
 import { useTheme } from 'next-themes';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, updateUserDisplayName } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
-  const [name, setName] = useState(user?.displayName || '');
+  const [name, setName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,16 +35,32 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  const handleSaveChanges = () => {
-    // Here you would typically update the user profile
-    toast({
-      title: 'Settings Saved',
-      description: 'Your profile has been updated.',
-    });
+  const handleSaveChanges = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      await updateUserDisplayName(name);
+      toast({
+        title: 'Settings Saved',
+        description: 'Your profile has been updated.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error updating profile',
+        description: error.message,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isMounted || loading) {
-    return null; // or a loading skeleton
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -64,20 +82,21 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input 
-                    id="name" 
-                    value={name} 
+                  <Input
+                    id="name"
+                    value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your full name"
                     className="shadow-neumorphic-inset"
+                    disabled={isSaving}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    value={user?.email || ''} 
-                    disabled 
+                  <Input
+                    id="email"
+                    value={user?.email || ''}
+                    disabled
                     className="shadow-neumorphic-inset"
                   />
                 </div>
@@ -97,13 +116,20 @@ export default function SettingsPage() {
                   <Switch
                     id="dark-mode"
                     checked={theme === 'dark'}
-                    onCheckedChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                    onCheckedChange={() =>
+                      setTheme(theme === 'light' ? 'dark' : 'light')
+                    }
                   />
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handleSaveChanges}>Save Changes</Button>
+                <Button onClick={handleSaveChanges} disabled={isSaving}>
+                  {isSaving && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Changes
+                </Button>
               </div>
             </CardContent>
           </Card>

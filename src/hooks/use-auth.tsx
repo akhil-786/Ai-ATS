@@ -7,18 +7,20 @@ import {
   useContext,
   type ReactNode,
 } from 'react';
-import { 
-  getAuth, 
-  onAuthStateChanged, 
+import {
+  getAuth,
+  onAuthStateChanged,
   signOut as firebaseSignOut,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  type User
+  type User,
+  updateProfile,
 } from 'firebase/auth';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useFirestore } from '@/firebase';
 import { Loader2 } from 'lucide-react';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +29,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
+  updateUserDisplayName: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,7 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const googleProvider = new GoogleAuthProvider();
 
 function AuthProvider({ children }: { children: ReactNode }) {
-  const { auth } = useFirebase();
+  const { auth, firestore } = useFirebase();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,10 +49,27 @@ function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [auth]);
 
+  const updateUserInFirestore = async (user: User, name?: string) => {
+    if (!firestore) return;
+    const userRef = doc(firestore, 'users', user.uid);
+    await setDoc(
+      userRef,
+      {
+        id: user.uid,
+        email: user.email,
+        name: name || user.displayName || 'Anonymous User',
+        createdAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  };
+
   const signInWithEmail = async (email: string, password: string) => {
     setLoading(true);
     try {
-      return await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await updateUserInFirestore(userCredential.user);
+      return userCredential;
     } finally {
       setLoading(false);
     }
@@ -58,7 +78,13 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = async (email: string, password: string) => {
     setLoading(true);
     try {
-      return await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      await updateUserInFirestore(userCredential.user);
+      return userCredential;
     } finally {
       setLoading(false);
     }
@@ -67,7 +93,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
-      return await signInWithPopup(auth, googleProvider);
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      await updateUserInFirestore(userCredential.user);
+      return userCredential;
     } finally {
       setLoading(false);
     }
@@ -83,6 +111,23 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserDisplayName = async (name: string) => {
+    if (user && firestore) {
+      setLoading(true);
+      try {
+        await updateProfile(user, { displayName: name });
+        const userRef = doc(firestore, 'users', user.uid);
+        await setDoc(userRef, { name }, { merge: true });
+        // Manually update user state to reflect change immediately
+        setUser({ ...user, displayName: name });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      throw new Error('User not authenticated or Firestore not available');
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -90,9 +135,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
     signUpWithEmail,
     signInWithGoogle,
     signOut,
+    updateUserDisplayName,
   };
 
-  if (loading && user === null) {
+  if (loading && user === null && !auth.currentUser) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
