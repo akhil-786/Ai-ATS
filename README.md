@@ -179,4 +179,4 @@ This project is licensed under the **MIT License** — see the LICENSE file for 
 
 ---
 
-> © 2025 Ai-ATS — Built with ❤️ using Gemini AI, Genkit, and Next.js.
+> © 2025 Ai-ATS - Akhil
