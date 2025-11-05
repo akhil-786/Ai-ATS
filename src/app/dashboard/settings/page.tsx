@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import {
@@ -7,8 +10,41 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/use-auth';
+import { Switch } from '@/components/ui/switch';
+import { useTheme } from 'next-themes';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
+  const { user, loading } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
+  const [isMounted, setIsMounted] = useState(false);
+  const [name, setName] = useState(user?.displayName || '');
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (user) {
+      setName(user.displayName || '');
+    }
+  }, [user]);
+
+  const handleSaveChanges = () => {
+    // Here you would typically update the user profile
+    toast({
+      title: 'Settings Saved',
+      description: 'Your profile has been updated.',
+    });
+  };
+
+  if (!isMounted || loading) {
+    return null; // or a loading skeleton
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -17,15 +53,58 @@ export default function SettingsPage() {
           <header className="pb-8">
             <h1 className="font-headline text-3xl font-bold">Settings</h1>
           </header>
-          <Card className="shadow-neumorphic">
+          <Card className="shadow-neumorphic max-w-2xl mx-auto">
             <CardHeader>
-              <CardTitle>Application Settings</CardTitle>
+              <CardTitle>Your Profile</CardTitle>
               <CardDescription>
-                Manage your account and application settings.
+                Manage your account and preferences.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p>Settings form will go here.</p>
+            <CardContent className="space-y-8">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your full name"
+                    className="shadow-neumorphic-inset"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    value={user?.email || ''} 
+                    disabled 
+                    className="shadow-neumorphic-inset"
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="font-medium">Appearance</h3>
+                <div className="flex items-center justify-between rounded-lg border p-4 shadow-neumorphic-inset">
+                  <div>
+                    <Label htmlFor="dark-mode">Dark Mode</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Toggle between light and dark themes.
+                    </p>
+                  </div>
+                  <Switch
+                    id="dark-mode"
+                    checked={theme === 'dark'}
+                    onCheckedChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSaveChanges}>Save Changes</Button>
+              </div>
             </CardContent>
           </Card>
         </div>
