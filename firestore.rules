@@ -1,0 +1,140 @@
+/**
+ * @fileoverview Firestore Security Rules for CareerAI application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for all data. Each user can only
+ * access their own data and data explicitly shared with them. No data is publicly accessible.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, creating a clear ownership hierarchy.
+ * - /users/{userId}: User profile information.
+ * - /users/{userId}/resumes/{resumeId}: Resumes belonging to the user.
+ * - /users/{userId}/resumes/{resumeId}/atsReports/{atsReportId}: ATS reports for a specific resume.
+ * - /users/{userId}/jobRecommendations/{jobRecommendationId}: Job recommendations for the user.
+ *
+ * Key Security Decisions:
+ * - **Strict Ownership:** All data access is restricted to the owning user, enforced through path-based rules and denormalized userId fields.
+ * - **No User Listing:** Listing all users is disallowed.
+ * - **Denormalization for Authorization:** The `userId` is denormalized into `Resume`, `AtsReport`, and `JobRecommendation` documents. This avoids costly `get()` calls and simplifies authorization logic.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces user-level access control for user profiles.
+     * @path /users/{userId}
+     * @allow (create) - Authenticated user can create their own profile if the userId matches their auth UID.
+     * @allow (get, update, delete) - Authenticated user can access their own profile if the userId matches their auth UID.
+     * @deny (create) - If the user ID in the request does not match the authenticated user's ID.
+     * @deny (get, update, delete) - If the user ID in the path does not match the authenticated user's ID.
+     * @principle Enforces strict user ownership.
+     */
+    match /users/{userId} {
+      // isSignedIn() function, simply checks request.auth != null
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      // isOwner() function, checks if the userId matches the authenticated user's UID
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      // isExistingOwner() function, checks if the userId matches the authenticated user's UID and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == request.auth.uid;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-level access control for resumes under a specific user.
+     * @path /users/{userId}/resumes/{resumeId}
+     * @allow (create) - Authenticated user can create a resume under their user ID.
+     * @allow (get, list, update, delete) - Authenticated user can access/modify their own resumes.
+     * @deny (create) - If the user ID in the path does not match the authenticated user's ID.
+     * @deny (get, list, update, delete) - If the user ID in the path does not match the authenticated user's ID.
+     * @principle Enforces strict user ownership.
+     */
+    match /users/{userId}/resumes/{resumeId} {
+      // isSignedIn() function, simply checks request.auth != null
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      // isOwner() function, checks if the userId matches the authenticated user's UID
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      // isExistingOwner() function, checks if the userId matches the authenticated user's UID and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-level access control for ATS reports under a specific resume.
+     * @path /users/{userId}/resumes/{resumeId}/atsReports/{atsReportId}
+     * @allow (create) - Authenticated user can create an ATS report under their resume.
+     * @allow (get, list, update, delete) - Authenticated user can access/modify their own ATS reports.
+     * @deny (create) - If the user ID in the path does not match the authenticated user's ID.
+     * @deny (get, list, update, delete) - If the user ID in the path does not match the authenticated user's ID.
+     * @principle Enforces strict user ownership.
+     */
+    match /users/{userId}/resumes/{resumeId}/atsReports/{atsReportId} {
+      // isSignedIn() function, simply checks request.auth != null
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      // isOwner() function, checks if the userId matches the authenticated user's UID
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      // isExistingOwner() function, checks if the userId matches the authenticated user's UID and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-level access control for job recommendations under a specific user.
+     * @path /users/{userId}/jobRecommendations/{jobRecommendationId}
+     * @allow (create) - Authenticated user can create a job recommendation under their user ID.
+     * @allow (get, list, update, delete) - Authenticated user can access/modify their own job recommendations.
+     * @deny (create) - If the user ID in the path does not match the authenticated user's ID.
+     * @deny (get, list, update, delete) - If the user ID in the path does not match the authenticated user's ID.
+     * @principle Enforces strict user ownership.
+     */
+    match /users/{userId}/jobRecommendations/{jobRecommendationId} {
+      // isSignedIn() function, simply checks request.auth != null
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      // isOwner() function, checks if the userId matches the authenticated user's UID
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      // isExistingOwner() function, checks if the userId matches the authenticated user's UID and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

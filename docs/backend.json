@@ -1,0 +1,271 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the CareerAI application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "name",
+        "createdAt"
+      ]
+    },
+    "Resume": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Resume",
+      "type": "object",
+      "description": "Represents a user's resume stored in the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Resume entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Resume)"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Original file name of the resume."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL of the resume file stored in Firebase Storage.",
+          "format": "uri"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the resume was uploaded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "fileName",
+        "fileUrl",
+        "uploadDate"
+      ]
+    },
+    "AtsReport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AtsReport",
+      "type": "object",
+      "description": "Represents the ATS analysis report for a specific resume.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AtsReport entity."
+        },
+        "resumeId": {
+          "type": "string",
+          "description": "Reference to Resume. (Relationship: Resume 1:1 AtsReport)"
+        },
+        "atsScore": {
+          "type": "number",
+          "description": "The ATS score of the resume, as determined by the analysis."
+        },
+        "keySkills": {
+          "type": "array",
+          "description": "Key skills identified in the resume.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "weaknesses": {
+          "type": "array",
+          "description": "Weaknesses identified in the resume.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "description": "Suggestions for improving the resume's ATS score.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "analysisDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the ATS analysis was performed.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "resumeId",
+        "atsScore",
+        "keySkills",
+        "weaknesses",
+        "suggestions",
+        "analysisDate"
+      ]
+    },
+    "JobRecommendation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "JobRecommendation",
+      "type": "object",
+      "description": "Represents a job recommendation for a user, based on their resume analysis.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the JobRecommendation entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N JobRecommendation)"
+        },
+        "atsReportId": {
+          "type": "string",
+          "description": "Reference to AtsReport. (Relationship: AtsReport 1:N JobRecommendation)"
+        },
+        "jobTitle": {
+          "type": "string",
+          "description": "Title of the recommended job."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "Name of the company offering the job."
+        },
+        "matchPercentage": {
+          "type": "number",
+          "description": "Percentage indicating how well the job matches the user's skills."
+        },
+        "jobUrl": {
+          "type": "string",
+          "description": "URL to the job posting.",
+          "format": "uri"
+        },
+        "recommendationDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the job was recommended.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "atsReportId",
+        "jobTitle",
+        "companyName",
+        "matchPercentage",
+        "jobUrl",
+        "recommendationDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Collection to store user profiles. Each document represents a user. The 'userId' parameter is the Firebase Auth UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/resumes/{resumeId}",
+        "definition": {
+          "entityName": "Resume",
+          "schema": {
+            "$ref": "#/backend/entities/Resume"
+          },
+          "description": "Collection to store resumes for each user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "resumeId",
+              "description": "Unique identifier for the resume."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/resumes/{resumeId}/atsReports/{atsReportId}",
+        "definition": {
+          "entityName": "AtsReport",
+          "schema": {
+            "$ref": "#/backend/entities/AtsReport"
+          },
+          "description": "Collection to store ATS reports for each resume. Includes denormalized 'userId' and 'resumeId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "resumeId",
+              "description": "Unique identifier for the resume."
+            },
+            {
+              "name": "atsReportId",
+              "description": "Unique identifier for the ATS report."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/jobRecommendations/{jobRecommendationId}",
+        "definition": {
+          "entityName": "JobRecommendation",
+          "schema": {
+            "$ref": "#/backend/entities/JobRecommendation"
+          },
+          "description": "Collection to store job recommendations for each user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "jobRecommendationId",
+              "description": "Unique identifier for the job recommendation."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and debuggability, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Authorization independence is achieved through denormalization, specifically by storing the `userId` within the `Resume`, `AtsReport` and `JobRecommendation` documents, eliminating the need for `get()` calls in security rules. Structural Segregation is applied by using path-based ownership (`/users/{userId}/resumes/{resumeId}`), ensuring all documents in a collection share the same security requirements. Access Modeling uses hierarchical paths for user-owned data (Resumes, ATS Reports, Job Recommendations), and relies solely on `request.auth.uid` for authorization. This structure supports secure `list` operations by ensuring that each collection only contains documents accessible to the user identified by the `userId` in the path. Furthermore the path structure enables the enforcement of invariants such as ownership and data consistency."
+  }
+}
