@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,8 +12,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Mail, KeyRound } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Mail, KeyRound, Loader2 } from 'lucide-react';
+import { type ReactNode, useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg role="img" viewBox="0 0 24 24" {...props}>
@@ -34,58 +39,149 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export function AuthModal({ children }: { children: ReactNode }) {
+function AuthForm({
+  isSignUp = false,
+  setOpen,
+}: {
+  isSignUp?: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, loading } =
+    useAuth();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (isSignUp) {
+        await signUpWithEmail(email, password);
+      } else {
+        await signInWithEmail(email, password);
+      }
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Failed',
+        description: error.message,
+      });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Sign-In Failed',
+        description: error.message,
+      });
+    }
+  };
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <Button
+        variant="outline"
+        className="shadow-neumorphic-inset"
+        onClick={handleGoogleSignIn}
+        type="button"
+        disabled={loading}
+      >
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <GoogleIcon className="mr-2 h-4 w-4" />
+        )}
+        Sign {isSignUp ? 'up' : 'in'} with Google
+      </Button>
+      <div className="relative">
+        <Separator />
+        <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-sm text-muted-foreground">
+          OR
+        </span>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`email-${isSignUp}`}>Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id={`email-${isSignUp}`}
+            type="email"
+            placeholder="you@example.com"
+            className="pl-9 shadow-neumorphic-inset"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`password-${isSignUp}`}>Password</Label>
+        <div className="relative">
+          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id={`password-${isSignUp}`}
+            type="password"
+            placeholder="••••••••"
+            className="pl-9 shadow-neumorphic-inset"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+      <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isSignUp ? 'Create Account' : 'Sign In'}
+      </Button>
+    </form>
+  );
+}
+
+export function AuthModal({
+  children,
+  open,
+  onOpenChange,
+}: {
+  children?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const currentOpen = isControlled ? open : internalOpen;
+  const setCurrentOpen = isControlled ? onOpenChange : setInternalOpen;
+
+  return (
+    <Dialog open={currentOpen} onOpenChange={setCurrentOpen}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-md shadow-neumorphic">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl text-center">
             Welcome to CareerAI
           </DialogTitle>
           <DialogDescription className="text-center">
-            Sign in to save your reports and track your progress.
+            Sign in or create an account to get personalized job recommendations.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <Button variant="outline" className="shadow-neumorphic-inset">
-            <GoogleIcon className="mr-2 h-4 w-4" />
-            Sign in with Google
-          </Button>
-          <div className="relative">
-            <Separator />
-            <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-sm text-muted-foreground">
-              OR
-            </span>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                className="pl-9 shadow-neumorphic-inset"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="pl-9 shadow-neumorphic-inset"
-              />
-            </div>
-          </div>
-        </div>
-        <Button type="submit" className="bg-primary hover:bg-primary/90">
-          Sign In
-        </Button>
+        <Tabs defaultValue="signin" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+          <TabsContent value="signin">
+            <AuthForm setOpen={setCurrentOpen} />
+          </TabsContent>
+          <TabsContent value="signup">
+            <AuthForm isSignUp setOpen={setCurrentOpen} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
